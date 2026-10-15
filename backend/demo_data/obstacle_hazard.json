@@ -1,0 +1,11 @@
+{
+  "speech": "Caution: downward stairs directly ahead at 12 o'clock, about 3 steps away. Handrail on your right.",
+  "confidence": "high",
+  "found": false,
+  "direction_clock": "12 o'clock",
+  "distance_hint": "about 3 steps away",
+  "detected_text": null,
+  "hazards": ["downward stairs directly ahead"],
+  "mode": "describe",
+  "demo": true
+}

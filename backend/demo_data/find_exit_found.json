@@ -1,0 +1,11 @@
+{
+  "speech": "Green exit sign at 12 o'clock directly ahead, about 8 steps away.",
+  "confidence": "high",
+  "found": true,
+  "direction_clock": "12 o'clock",
+  "distance_hint": "about 8 steps away",
+  "detected_text": "EXIT",
+  "hazards": [],
+  "mode": "find",
+  "demo": true
+}

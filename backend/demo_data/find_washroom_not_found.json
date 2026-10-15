@@ -1,0 +1,11 @@
+{
+  "speech": "No washroom sign seen ahead.",
+  "confidence": "high",
+  "found": false,
+  "direction_clock": null,
+  "distance_hint": null,
+  "detected_text": null,
+  "hazards": [],
+  "mode": "find",
+  "demo": true
+}

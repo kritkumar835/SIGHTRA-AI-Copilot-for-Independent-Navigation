@@ -1,0 +1,11 @@
+{
+  "speech": "Restroom sign at 2 o'clock, pointing right, about 5 steps away.",
+  "confidence": "high",
+  "found": true,
+  "direction_clock": "2 o'clock",
+  "distance_hint": "about 5 steps away",
+  "detected_text": "RESTROOM ->",
+  "hazards": [],
+  "mode": "find",
+  "demo": true
+}

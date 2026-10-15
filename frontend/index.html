@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0e17">
+    <meta name="description" content="SightGuide: Mobile audio-first AI vision assistant for visually impaired users. Hands-free environment description, OCR reading, and guided washroom navigation.">
+    <title>SightGuide - Audio-First Vision Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container" id="app-root">
+        
+        <!-- Full-screen tap-to-talk gesture layer for hands-free accessibility -->
+        <div class="tap-talk-layer" id="tap-talk-layer" role="button" tabindex="0" aria-label="Tap anywhere to activate microphone for voice commands"></div>
+
+        <!-- Top Header Navigation -->
+        <header class="app-header">
+            <div class="brand-wrapper">
+                <div class="brand-icon" aria-hidden="true">S</div>
+                <h1 class="brand-title">SightGuide</h1>
+            </div>
+            <div class="header-actions">
+                <span id="status-badge" class="status-badge ready" aria-live="polite">Ready</span>
+                <button id="btn-camera-flip" class="icon-btn" aria-label="Flip camera lens" title="Flip camera">
+                    📷
+                </button>
+                <button id="btn-help" class="icon-btn" aria-label="Open voice command guide and help" title="Help">
+                    ❓
+                </button>
+            </div>
+        </header>
+
+        <!-- Live Camera Viewport with Visual Reticle and Radar Sweep -->
+        <section class="viewport-section" aria-label="Camera preview">
+            <video id="camera-preview" playsinline autoplay muted></video>
+            <div class="viewport-overlay"></div>
+            <div id="scan-radar-overlay" class="scan-radar-overlay" aria-hidden="true"></div>
+            
+            <!-- Audio Speaking Waveform Animation -->
+            <div id="speaking-indicator" class="speaking-indicator" aria-hidden="true">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <span style="font-size:12px; font-weight:700; color:var(--accent-amber);">Speaking...</span>
+            </div>
+        </section>
+
+        <!-- Mode Pill Switcher Bar -->
+        <nav class="mode-selector-bar" role="tablist" aria-label="Primary navigation modes">
+            <button class="mode-pill active" data-mode="describe" role="tab" aria-selected="true" id="pill-describe">
+                Describe
+            </button>
+            <button class="mode-pill" data-mode="read" role="tab" aria-selected="false" id="pill-read">
+                Read Sign
+            </button>
+            <button class="mode-pill" data-mode="find" role="tab" aria-selected="false" id="pill-find">
+                Guided Find
+            </button>
+        </nav>
+
+        <!-- Persistent Transcript Scroll Area (Judges / Helpers / Accessibility) -->
+        <main class="transcript-section" aria-label="Conversation and findings transcript">
+            <div class="transcript-list" id="transcript-list" role="log" aria-live="polite" aria-atomic="false">
+                <!-- Dynamically populated speech and recognition entries -->
+            </div>
+        </main>
+
+        <!-- Interactive Controls Bottom Sheet (Min 64px Touch Targets) -->
+        <footer class="controls-zone">
+            <!-- Push-To-Talk Microphone Circle -->
+            <div class="mic-wrapper">
+                <button id="mic-btn" class="big-mic-btn" aria-label="Toggle voice listening. Tap to talk.">
+                    🎙️
+                </button>
+                <span id="mic-status" class="mic-status-label" aria-live="polite">Tap anywhere to speak</span>
+            </div>
+
+            <!-- Big Accessible Action Button Grid -->
+            <div class="action-grid">
+                <button id="btn-describe" class="big-action-btn btn-primary" aria-label="Describe current surroundings">
+                    <span class="btn-icon">👁️</span>
+                    <span>Describe</span>
+                </button>
+
+                <button id="btn-read" class="big-action-btn btn-primary" aria-label="Read text or sign in front of camera">
+                    <span class="btn-icon">📖</span>
+                    <span>Read Sign</span>
+                </button>
+
+                <button id="btn-find-washroom" class="big-action-btn btn-cyan" aria-label="Guided scan to find washroom">
+                    <span class="btn-icon">🚻</span>
+                    <span>Find Washroom</span>
+                </button>
+
+                <button id="btn-find-exit" class="big-action-btn btn-cyan" aria-label="Guided scan to find exit">
+                    <span class="btn-icon">🚪</span>
+                    <span>Find Exit</span>
+                </button>
+
+                <button id="btn-obstacles" class="big-action-btn btn-hazard" aria-pressed="false" aria-label="Toggle obstacle and hazard warnings">
+                    <span class="btn-icon">⚠️</span>
+                    <span>Obstacles</span>
+                </button>
+
+                <button id="btn-stop" class="big-action-btn btn-stop" aria-label="Stop speaking and cancel active scan">
+                    <span class="btn-icon">⏹️</span>
+                    <span>Stop</span>
+                </button>
+            </div>
+
+            <div class="footer-row">
+                <span class="disclaimer-text">
+                    Auditory navigation aid. Does not replace cane or guide dog.
+                </span>
+                <label for="fallback-file-input" style="cursor:pointer; font-size:11px; color:var(--text-muted); text-decoration:underline;" title="Test image upload">
+                    Upload Test Frame
+                </label>
+                <input type="file" id="fallback-file-input" accept="image/*" style="display:none;" aria-label="Upload test frame for simulation">
+            </div>
+        </footer>
+
+        <!-- Accessible Voice Guide / Help Modal -->
+        <div id="help-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2 id="modal-title" class="modal-title">Voice Commands</h2>
+                </div>
+                <div class="modal-body">
+                    <p>SightGuide is audio-first. Tap anywhere on the screen and speak any of these commands:</p>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <span class="command-name">"Describe"</span>
+                            <span class="command-desc">Describes layout & clock positions</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">"Read this"</span>
+                            <span class="command-desc">Reads signs, room numbers, text</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">"Find washroom"</span>
+                            <span class="command-desc">Guided 360° scanning loop</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">"Find exit"</span>
+                            <span class="command-desc">Guided scan for exit doors/signs</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">"Obstacles"</span>
+                            <span class="command-desc">Toggle hazard alerts & buzzes</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">"Repeat"</span>
+                            <span class="command-desc">Re-speaks the last message</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">"Stop"</span>
+                            <span class="command-desc">Cancels speech and active scan</span>
+                        </div>
+                    </div>
+                    <p style="font-size:12px; color:var(--text-muted);">
+                        Haptics: Single buzz = command heard. Double buzz = target found. Long buzz = hazard alert.
+                    </p>
+                </div>
+                <button id="btn-close-help" class="modal-close-btn" aria-label="Close help modal">Got It</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/earcues.js"></script>
+    <script src="js/haptics.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/speech.js"></script>
+    <script src="js/modes.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

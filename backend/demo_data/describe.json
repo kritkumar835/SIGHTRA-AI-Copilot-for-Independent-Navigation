@@ -1,0 +1,11 @@
+{
+  "speech": "Hallway ahead. Closed wooden door at 2 o'clock, about 4 steps away. Water cooler at 10 o'clock.",
+  "confidence": "high",
+  "found": false,
+  "direction_clock": "2 o'clock",
+  "distance_hint": "about 4 steps away",
+  "detected_text": null,
+  "hazards": [],
+  "mode": "describe",
+  "demo": true
+}

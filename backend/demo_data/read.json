@@ -1,0 +1,11 @@
+{
+  "speech": "Restrooms with arrow pointing right, and Room 204 directly ahead.",
+  "confidence": "high",
+  "found": false,
+  "direction_clock": "12 o'clock",
+  "distance_hint": "about 3 steps away",
+  "detected_text": "RESTROOMS -> | ROOM 204",
+  "hazards": [],
+  "mode": "read",
+  "demo": true
+}
