@@ -7,14 +7,20 @@ SightGuide helps blind and low-vision individuals navigate unfamiliar buildings,
 
 ## 🌟 Key Features
 
-1. **DESCRIBE ("What's around me")**:
+1. **LIVE OBJECT DETECTION (Real-Time Spatial HUD & Audio Navigation)**:
+   - Continuous real-time multi-object detection (people, chairs, tables, doors, barriers, bottles, backpacks, stairs) directly from the camera feed.
+   - Dynamic visual Heads-Up Display (HUD) overlay: neon high-contrast bounding boxes with clock directions (e.g. `11 o'clock`, `12 o'clock`, `1 o'clock`) and step distance estimation.
+   - Dual-engine architecture: 30 FPS client-side TensorFlow.js COCO-SSD with seamless high-speed `/api/detect` backend fallback.
+   - Intelligent debounced auditory announcements and urgent collision alerts for obstacles within 2-3 steps directly ahead.
+2. **DESCRIBE ("What's around me")**:
    - Concise 1–2 spoken sentence description of nearby physical objects, layout, and obstacles.
    - Grounded orientation using **clock positions** (e.g., *"Door at 2 o'clock, about 4 steps away"*).
-2. **READ ("Read this")**:
+3. **READ ("Read this")**:
    - Accurate OCR of directional signs, door plaques, room numbers, and labels.
    - Speaks exact text followed by directional arrow context (e.g., *"Restrooms with arrow pointing right, Room 204 directly ahead"*).
    - Honestly hedges if text is partially obscured or low confidence.
-3. **FIND (Guided Scanning Loop — Hero Feature)**:
+4. **FIND (Guided Scanning Loop — Hero Feature)**:
+
    - Voice trigger: *"Find washroom"*, *"Find exit"*, or *"Find <target>"*.
    - Auditory turn guidance: *"Finding washroom. Slowly turn left."*
    - Captures and analyzes camera frames every ~2.5 seconds.

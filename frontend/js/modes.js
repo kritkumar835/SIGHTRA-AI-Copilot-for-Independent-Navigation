@@ -23,9 +23,19 @@ class ModeController {
             this.stopFindScan();
         }
 
+        if (this.currentMode === "detect" && newMode !== "detect") {
+            if (window.liveDetector) window.liveDetector.stop();
+        }
+
         this.currentMode = newMode;
         if (target) {
             this.findTarget = target;
+        }
+
+        if (newMode === "detect") {
+            if (window.liveDetector && !window.liveDetector.isActive) {
+                window.liveDetector.start();
+            }
         }
 
         if (this.onStateChange) {
@@ -33,10 +43,30 @@ class ModeController {
                 mode: this.currentMode,
                 obstacles: this.obstaclesEnabled,
                 isScanning: this.isScanning,
+                isLiveDetect: this.currentMode === "detect",
                 target: this.findTarget
             });
         }
     }
+
+    runLiveDetect() {
+        if (this.currentMode === "detect" && window.liveDetector && window.liveDetector.isActive) {
+            this.stopLiveDetect();
+        } else {
+            this.setMode("detect");
+        }
+    }
+
+    stopLiveDetect() {
+        if (window.liveDetector) {
+            window.liveDetector.stop();
+        }
+        this.setMode("describe");
+        if (window.speechEngine) {
+            window.speechEngine.speak("Live detection stopped.");
+        }
+    }
+
 
     toggleObstacles() {
         this.obstaclesEnabled = !this.obstaclesEnabled;

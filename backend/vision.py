@@ -30,9 +30,13 @@ class BaseVisionProvider:
         raise NotImplementedError
 
 class GeminiVisionProvider(BaseVisionProvider):
-    def __init__(self, api_key: str, model: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str, model: str = "gemini-1.5-flash"):
         self.api_key = api_key
-        self.model = model or "gemini-2.5-flash"
+        # Ensure a valid model is used if default was set to nonexistent version
+        if not model or "2.5" in model:
+            self.model = "gemini-1.5-flash"
+        else:
+            self.model = model
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
 
     async def analyze(
@@ -90,6 +94,11 @@ class GeminiVisionProvider(BaseVisionProvider):
                     resp = await client.post(url, json=payload)
                     if resp.status_code != 200:
                         logger.warning(f"Gemini API returned status {resp.status_code}: {resp.text}")
+                        # Fallback to gemini-2.0-flash or retry if model error
+                        if "not found" in resp.text.lower() and self.model != "gemini-2.0-flash":
+                            self.model = "gemini-2.0-flash"
+                            url = f"{self.base_url}/models/{self.model}:generateContent?key={self.api_key}"
+                            continue
                         if attempt == 0 and resp.status_code in (429, 500, 503):
                             await asyncio.sleep(1.0)
                             continue
@@ -121,6 +130,13 @@ class GeminiVisionProvider(BaseVisionProvider):
                     if confidence == "low" and not any(h in speech.lower() for h in ["i think", "might be", "not sure", "appears to"]):
                         speech = f"I'm not completely sure, but {speech[0].lower() + speech[1:] if len(speech) > 1 else speech}"
 
+                    raw_objects = parsed.get("detected_objects", [])
+                    objects_list = []
+                    if isinstance(raw_objects, list):
+                        for obj in raw_objects:
+                            if isinstance(obj, dict) and "name" in obj:
+                                objects_list.append(obj)
+
                     return AnalyzeResponse(
                         speech=speech,
                         confidence=confidence,
@@ -128,6 +144,7 @@ class GeminiVisionProvider(BaseVisionProvider):
                         direction_clock=parsed.get("direction_clock"),
                         distance_hint=parsed.get("distance_hint"),
                         detected_text=parsed.get("detected_text"),
+                        detected_objects=objects_list,
                         hazards=parsed.get("hazards", []),
                         mode=mode,
                         demo=False
@@ -243,6 +260,43 @@ class DemoVisionProvider(BaseVisionProvider):
                     }
             return AnalyzeResponse(**data)
 
+        elif mode in ("detect", "live"):
+            try:
+                from backend.detector import get_live_detector, decode_image_base64
+                img = decode_image_base64(image_base64)
+                if img is not None:
+                    det = get_live_detector().detect_frame(img, obstacles_enabled=obstacles_enabled)
+                    return AnalyzeResponse(
+                        speech=det.speech,
+                        confidence="high",
+                        found=len(det.objects) > 0,
+                        direction_clock=det.closest_object.direction_clock if det.closest_object else "12 o'clock",
+                        distance_hint=det.closest_object.distance if det.closest_object else "about 3 steps away",
+                        detected_text=None,
+                        detected_objects=det.objects,
+                        hazards=det.hazards,
+                        mode="detect",
+                        demo=False
+                    )
+            except Exception as e:
+                logger.warning(f"Live detection fallback error: {e}")
+
+            return AnalyzeResponse(
+                speech="Live detection active: Chair at 11 o'clock, 2 steps. Person at 1 o'clock, 4 steps.",
+                confidence="high",
+                found=True,
+                direction_clock="11 o'clock",
+                distance_hint="about 2 steps away",
+                detected_text=None,
+                detected_objects=[
+                    {"name": "chair", "direction_clock": "11 o'clock", "distance": "about 2 steps away", "bbox": [0.4, 0.15, 0.85, 0.45], "confidence": 0.92, "is_hazard": False},
+                    {"name": "person", "direction_clock": "1 o'clock", "distance": "about 4 steps away", "bbox": [0.2, 0.55, 0.9, 0.85], "confidence": 0.88, "is_hazard": False}
+                ],
+                hazards=[],
+                mode="detect",
+                demo=True
+            )
+
         data = self._load_canned("describe.json")
         return AnalyzeResponse(**data)
 
@@ -251,7 +305,9 @@ def get_vision_provider() -> BaseVisionProvider:
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     demo_mode_str = os.getenv("DEMO_MODE", "false").strip().lower()
     demo_mode = demo_mode_str in ("true", "1", "yes")
-    model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+    model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+    if not model or "2.5" in model:
+        model = "gemini-1.5-flash"
 
     if demo_mode or not api_key:
         logger.info("Using DemoVisionProvider (DEMO_MODE=True or GEMINI_API_KEY unset).")

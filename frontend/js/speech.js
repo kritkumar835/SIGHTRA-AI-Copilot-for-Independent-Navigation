@@ -5,7 +5,7 @@ class SpeechEngine {
         this.recognition = null;
         this.isListening = false;
         this.isSpeaking = false;
-        this.lastSpokenText = "Welcome to SightGuide. Tap anywhere and say describe, read, or find washroom.";
+        this.lastSpokenText = "Welcome to DRISHTI-AI. Tap anywhere and say live detect, describe, read, or find washroom.";
         this.onCommandCallback = null;
         this.onListeningChangeCallback = null;
         this.onSpeechStateCallback = null;

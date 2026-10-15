@@ -81,7 +81,42 @@ def test_all():
     res = r.json()
     assert len(res["hazards"]) > 0 or "stairs" in res["speech"].lower()
 
+    print("\n--- 8. Testing /api/detect (Live Real-Time Object Detection) ---")
+    import io, base64
+    from PIL import Image
+    test_img = Image.new("RGB", (320, 240), color=(128, 128, 128))
+    buf = io.BytesIO()
+    test_img.save(buf, format="JPEG")
+    valid_b64 = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+
+    payload = {
+        "image_base64": valid_b64,
+        "obstacles_enabled": True,
+        "confidence_threshold": 0.35
+    }
+    r = httpx.post(f"{BASE_URL}/api/detect", json=payload)
+    print(r.status_code, json.dumps(r.json(), indent=2))
+    assert r.status_code == 200
+    res = r.json()
+    assert "objects" in res
+    assert "speech" in res
+    assert res["object_count"] >= 0
+
+    print("\n--- 9. Testing mode='detect' in /api/analyze ---")
+    payload = {
+        "image_base64": valid_b64,
+        "mode": "detect",
+        "obstacles_enabled": True
+    }
+    r = httpx.post(f"{BASE_URL}/api/analyze", json=payload)
+    print(r.status_code, json.dumps(r.json(), indent=2))
+    assert r.status_code == 200
+    res = r.json()
+    assert res["mode"] == "detect"
+    assert "speech" in res
+
     print("\n ALL BACKEND ACCEPTANCE TESTS PASSED!")
 
 if __name__ == "__main__":
     test_all()
+
